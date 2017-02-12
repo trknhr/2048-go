@@ -2,44 +2,15 @@ package main
 
 import (
 	"github.com/nsf/termbox-go"
+	"fmt"
 )
 
-//func keyEventLoop(kch chan termbox.Key) {
-//	for {
-//		switch ev := termbox.PollEvent(); ev.Type {
-//		case termbox.EventKey:
-//			kch <- ev.Key
-//		default:
-//		}
-//	}
-//}
-
-/*
-
-func drawLine(x, y int, str string) {
-	runes := []rune(str)
-	for i := 0; i < len(runes); i++ {
-		termbox.SetCell(x+i, y, runes[i], termbox.ColorDefault, termbox.ColorDefault)
-	}
+type Tile struct{
+	x int
+	y int
+	value int
+	isEmpty bool
 }
-func main() {
-	print("hello world")
-	for{
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			if ev.Key == termbox.KeyArrowDown{
-				print("hello world")
-				drawLine(0, 1, "--------------------------------------------------------------------------------")
-				termbox.Flush()
-				break
-			}
-		default:
-		}
-	}
-
-	defer termbox.Close()
-}
-*/
 
 func drawLine(x, y int, str string) {
 	color := termbox.ColorDefault
@@ -59,43 +30,30 @@ func fill(x, y, w, h int, cell termbox.Cell) {
 	}
 }
 
-func initdraw() {
-	//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	//
-	//drawLine(0, 0, "Press ESC to exit.")
-	//drawLine(2, 1, fmt.Sprintf("date: %v", time.Now()))
-	//
-	//termbox.Flush()
+func initDraw() {
 	const coldef = termbox.ColorDefault
 	termbox.Clear(coldef, coldef)
-	w, h := termbox.Size()
-	//oneCellWidth :=  20
-	midy := h / 2
-	midx := (w - 30) / 2
+	gameWidth := 100
+	gameHeight := 50
+	const ROW_SIZE = 4
+	const COLUMN_SIZE = 4
 
-	println(midy)
-	//termbox.SetCell(midx, oneCellWidth + 1, '-', coldef, coldef)
+	cellWidth := gameWidth / COLUMN_SIZE
+	cellHeight := gameHeight / ROW_SIZE
+	for ly := 0; ly < ROW_SIZE; ly++ {
+		for lx := 0; lx < COLUMN_SIZE; lx++ {
+			drawSell(lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+		}
+	}
 
-	//midx := (w - edit_box_width) / 2
-	//
-	//// unicode box drawing chars around the edit box
-	//termbox.SetCell(midx-1, midy, '│', coldef, coldef)
-	//termbox.SetCell(midx+edit_box_width, midy, '│', coldef, coldef)
-	//termbox.SetCell(midx-1, midy-1, '┌', coldef, coldef)
-	//termbox.SetCell(midx-1, midy+1, '└', coldef, coldef)
-	//termbox.SetCell(midx+edit_box_width, midy-1, '┐', coldef, coldef)
-	//termbox.SetCell(midx+edit_box_width, midy+1, '┘', coldef, coldef)
-	//fill(midx, midy-1, edit_box_width, 1, termbox.Cell{Ch: '─'})
-	fill(midx, midy+1, 30, 1, termbox.Cell{Ch: '─'})
-	fill(midx, midy+1, 1, 30, termbox.Cell{Ch: '|'})
-	println("=======midy============", midy)
-	//fill(midx, midy+1, 30, 1, termbox.Cell{Ch: '─'})
-	//
-	//edit_box.Draw(midx, midy, edit_box_width, 1)
-	//termbox.SetCursor(midx+edit_box.CursorX(), midy)
-
-	//tbprint(midx+6, midy+3, coldef, coldef, "Press ESC to quit")
 	termbox.Flush()
+}
+
+func drawSell(left int, top int , cellWidth int, cellHeight int){
+	fill(left, top, cellWidth, 1, termbox.Cell{Ch: '─'})
+	fill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
+	fill(left, top + cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
+	fill(left + cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
 }
 
 func drawMessage(msg string) {
@@ -106,8 +64,8 @@ func drawMessage(msg string) {
 	termbox.Flush()
 }
 
-func pollEvent() {
-	initdraw()
+func handleKeyEvent() {
+	initDraw()
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
@@ -127,21 +85,34 @@ func pollEvent() {
 				drawMessage("you pushed up")
 				break
 			default:
-				initdraw()
+				initDraw()
 			}
 		default:
-			initdraw()
+			initDraw()
 		}
 	}
 }
 
+//ランダムな初期値が欲しい
+//できたらデータとViewを繋げる
+//できたらTileあたりを肉付け
+//できたらGameの肉付け
 func main() {
-	err := termbox.Init()
-	if err != nil {
-		panic(err)
-	}
+	//err := termbox.Init()
+	////Error
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	defer termbox.Close()
+	gameState := Game{gridSize: 4}
+	gameState.setup()
 
-	pollEvent()
+	fmt.Print("OK\n")
+	fmt.Print(gameState.grid, "\n")
+	fmt.Print("Confirm")
+
+
+	//defer termbox.Close()
+
+	//handleKeyEvent()
 }
