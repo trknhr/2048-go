@@ -30,30 +30,33 @@ func fill(x, y, w, h int, cell termbox.Cell) {
 	}
 }
 
-func initDraw() {
-	const coldef = termbox.ColorDefault
-	termbox.Clear(coldef, coldef)
-	gameWidth := 100
-	gameHeight := 50
-	const ROW_SIZE = 4
-	const COLUMN_SIZE = 4
+//func initDraw() {
+//	const coldef = termbox.ColorDefault
+//	termbox.Clear(coldef, coldef)
+//	gameWidth := 100
+//	gameHeight := 50
+//	const ROW_SIZE = 4
+//	const COLUMN_SIZE = 4
+//
+//	cellWidth := gameWidth / COLUMN_SIZE
+//	cellHeight := gameHeight / ROW_SIZE
+//	for ly := 0; ly < ROW_SIZE; ly++ {
+//		for lx := 0; lx < COLUMN_SIZE; lx++ {
+//			drawSell(lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+//		}
+//	}
+//
+//	termbox.Flush()
+//}
 
-	cellWidth := gameWidth / COLUMN_SIZE
-	cellHeight := gameHeight / ROW_SIZE
-	for ly := 0; ly < ROW_SIZE; ly++ {
-		for lx := 0; lx < COLUMN_SIZE; lx++ {
-			drawSell(lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
-		}
-	}
-
-	termbox.Flush()
-}
-
-func drawSell(left int, top int , cellWidth int, cellHeight int){
+func drawSell(tile Tile, left int, top int , cellWidth int, cellHeight int){
 	fill(left, top, cellWidth, 1, termbox.Cell{Ch: '─'})
 	fill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
 	fill(left, top + cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
 	fill(left + cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
+	//if !tile.isEmpty{
+	//	fill(left + cellWidth / 2, top + cellHeight / 2, 1, 1, termbox.Cell{Ch: tile.value})
+	//}
 }
 
 func drawMessage(msg string) {
@@ -65,7 +68,6 @@ func drawMessage(msg string) {
 }
 
 func handleKeyEvent() {
-	initDraw()
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
@@ -85,12 +87,30 @@ func handleKeyEvent() {
 				drawMessage("you pushed up")
 				break
 			default:
-				initDraw()
+				//initDraw()
 			}
 		default:
-			initDraw()
+			//initDraw()
 		}
 	}
+}
+
+func gridDraw(grid *Grid){
+	const coldef = termbox.ColorDefault
+	termbox.Clear(coldef, coldef)
+	gameWidth := 100
+	gameHeight := 50
+
+	cellWidth := gameWidth / grid.size
+	cellHeight := gameHeight / grid.size
+	for ly := 0; ly < grid.size; ly++ {
+		for lx := 0; lx < grid.size; lx++ {
+			tile := grid.cells[ly][lx]
+			drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+		}
+	}
+
+	termbox.Flush()
 }
 
 //ランダムな初期値が欲しい
@@ -98,11 +118,12 @@ func handleKeyEvent() {
 //できたらTileあたりを肉付け
 //できたらGameの肉付け
 func main() {
-	//err := termbox.Init()
-	////Error
-	//if err != nil {
-	//	panic(err)
-	//}
+	err := termbox.Init()
+	//Error
+	fmt.Print("fjdlskajf;ldkjsaf;jk", err)
+	if err != nil {
+		panic(err)
+	}
 
 	gameState := Game{gridSize: 4}
 	gameState.setup()
@@ -110,9 +131,10 @@ func main() {
 	fmt.Print("OK\n")
 	fmt.Print(gameState.grid, "\n")
 	fmt.Print("Confirm")
+	//initDraw()
+	gridDraw(gameState.grid)
 
-
-	//defer termbox.Close()
+	defer termbox.Close()
 
 	//handleKeyEvent()
 }

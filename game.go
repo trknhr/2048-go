@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"fmt"
 )
 
 type Game struct {
@@ -19,6 +20,7 @@ func (g *Game)setup(){
 	g.startTiles = 2
 	g.grid = &Grid{size: g.gridSize}
 	g.grid.setup()
+	g.addStartTiles()
 }
 
 func (g *Game) addStartTiles(){
@@ -28,6 +30,17 @@ func (g *Game) addStartTiles(){
 }
 
 func (g *Game) addRandomTile(){
-	value := rand.Float32()
+	if g.grid.cellsAvailable() {
+		value := 2
+		if rand.Float32() < 0.9 {
+			value = 4
+		}
+		tile := g.grid.randomAvailableCell()
+		newTile := Tile{x: tile.x, y: tile.y, value: value, isEmpty: false}
 
+		fmt.Print(newTile, "\n")
+
+		g.grid.insertTile(newTile)
+	}
 }
+
