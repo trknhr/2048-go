@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/nsf/termbox-go"
-	"fmt"
+	"github.com/mattn/go-runewidth"
+	"strconv"
 )
 
 type Tile struct{
@@ -30,33 +31,23 @@ func fill(x, y, w, h int, cell termbox.Cell) {
 	}
 }
 
-//func initDraw() {
-//	const coldef = termbox.ColorDefault
-//	termbox.Clear(coldef, coldef)
-//	gameWidth := 100
-//	gameHeight := 50
-//	const ROW_SIZE = 4
-//	const COLUMN_SIZE = 4
-//
-//	cellWidth := gameWidth / COLUMN_SIZE
-//	cellHeight := gameHeight / ROW_SIZE
-//	for ly := 0; ly < ROW_SIZE; ly++ {
-//		for lx := 0; lx < COLUMN_SIZE; lx++ {
-//			drawSell(lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
-//		}
-//	}
-//
-//	termbox.Flush()
-//}
+func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
+	for _, c := range msg {
+		termbox.SetCell(x, y, c, fg, bg)
+		x += runewidth.RuneWidth(c)
+	}
+}
 
 func drawSell(tile Tile, left int, top int , cellWidth int, cellHeight int){
+	const coldef = termbox.ColorDefault
+
 	fill(left, top, cellWidth, 1, termbox.Cell{Ch: '─'})
 	fill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
 	fill(left, top + cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
 	fill(left + cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
-	//if !tile.isEmpty{
-	//	fill(left + cellWidth / 2, top + cellHeight / 2, 1, 1, termbox.Cell{Ch: tile.value})
-	//}
+	if !tile.isEmpty{
+		tbprint(left + cellWidth / 2, top + cellHeight / 2, coldef, coldef, strconv.Itoa(tile.value))
+	}
 }
 
 func drawMessage(msg string) {
@@ -120,7 +111,7 @@ func gridDraw(grid *Grid){
 func main() {
 	err := termbox.Init()
 	//Error
-	fmt.Print("fjdlskajf;ldkjsaf;jk", err)
+	//fmt.Print("fjdlskajf;ldkjsaf;jk", err)
 	if err != nil {
 		panic(err)
 	}
@@ -128,13 +119,13 @@ func main() {
 	gameState := Game{gridSize: 4}
 	gameState.setup()
 
-	fmt.Print("OK\n")
-	fmt.Print(gameState.grid, "\n")
-	fmt.Print("Confirm")
+	//fmt.Print("OK\n")
+	//fmt.Print(gameState.grid, "\n")
+	//fmt.Print("Confirm")
 	//initDraw()
 	gridDraw(gameState.grid)
 
 	defer termbox.Close()
 
-	//handleKeyEvent()
+	handleKeyEvent()
 }
