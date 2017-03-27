@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go run *.go
+find ./ -name '*.go' -not -name '*_test.go' | xargs go run

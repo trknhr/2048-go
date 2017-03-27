@@ -11,6 +11,12 @@ type Tile struct{
 	y int
 	value int
 	isEmpty bool
+	mergedFrom []*Tile
+}
+
+func (t *Tile) updatePosition(pos *Tile){
+	t.x = pos.x
+	t.y = pos.y
 }
 
 func drawLine(x, y int, str string) {
@@ -66,16 +72,16 @@ func handleKeyEvent() {
 			case termbox.KeyEsc:
 				return
 			case termbox.KeyArrowDown:
-				drawMessage("you pushed down")
+				dispatch("down", &Message{data: "push left"})
 				break
 			case termbox.KeyArrowLeft:
-				drawMessage("you pushed left")
+				dispatch("left", &Message{data: "push left"})
 				break
 			case termbox.KeyArrowRight:
-				drawMessage("you pushed right")
+				dispatch("right", &Message{data: "push left"})
 				break
 			case termbox.KeyArrowUp:
-				drawMessage("you pushed up")
+				dispatch("up", &Message{data: "push left"})
 				break
 			default:
 				//initDraw()
@@ -94,6 +100,7 @@ func gridDraw(grid *Grid){
 
 	cellWidth := gameWidth / grid.size
 	cellHeight := gameHeight / grid.size
+
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			tile := grid.cells[ly][lx]
@@ -104,14 +111,12 @@ func gridDraw(grid *Grid){
 	termbox.Flush()
 }
 
-//ランダムな初期値が欲しい
 //できたらデータとViewを繋げる
 //できたらTileあたりを肉付け
 //できたらGameの肉付け
 func main() {
 	err := termbox.Init()
 	//Error
-	//fmt.Print("fjdlskajf;ldkjsaf;jk", err)
 	if err != nil {
 		panic(err)
 	}
@@ -119,10 +124,6 @@ func main() {
 	gameState := Game{gridSize: 4}
 	gameState.setup()
 
-	//fmt.Print("OK\n")
-	//fmt.Print(gameState.grid, "\n")
-	//fmt.Print("Confirm")
-	//initDraw()
 	gridDraw(gameState.grid)
 
 	defer termbox.Close()

@@ -48,3 +48,49 @@ func (g *Grid)cellsAvailable() bool{
 
 	return isAvailable
 }
+
+func (g *Grid) eachCell(callback func(x int, y int, tile Tile)){
+	for x := 0; x < g.size; x++{
+		for y:= 0; y < g.size; y++{
+			callback(x, y, g.cells[x][y])
+		}
+	}
+}
+
+func (g *Grid) CellAvailable() bool{
+	isEmpty := false
+	g.eachCell(func(x int, y int, tile Tile){
+		isEmpty = tile.isEmpty
+	})
+
+	return isEmpty
+}
+
+func (g * Grid) WithinBounds(position *Tile) bool{
+	return position.x >= 0 && position.x < g.size &&
+	position.y >= 0 && position.y < g.size
+}
+
+//ここから実装。。。
+func (g *Grid) AvailableCells() [][]Tile{
+	cells := make([][]Tile, g.size)
+
+	g.eachCell(func(x int, y int, tile Tile){
+		cells[x][y] = tile
+	})
+
+	return cells
+}
+
+func (g *Grid) removeTile(tile *Tile){
+	g.cells[tile.x][tile.y].isEmpty = true
+}
+
+func (g *Grid)CellContent(cell *Tile) *Tile {
+	if(g.WithinBounds(cell)){
+		return &g.cells[cell.x][cell.y]
+	} else {
+		return nil
+	}
+
+}
