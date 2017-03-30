@@ -92,5 +92,4 @@ func (g *Grid)CellContent(cell *Tile) *Tile {
 	} else {
 		return nil
 	}
-
 }

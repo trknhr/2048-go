@@ -12,6 +12,7 @@ type Game struct {
 	over bool
 	won bool
 	grid *Grid
+	drawer *Drawer
 }
 
 type Vector struct{
@@ -110,6 +111,11 @@ func (g *Game) FindFarthestPosition(cell Tile, vector Vector) (*Tile, *Tile){
 
 	for g.grid.WithinBounds(&cell) && g.grid.CellAvailable() {
 		previous = cell
+		//fmt.Println("")
+		//fmt.Println("==vector=====", vector)
+		//fmt.Println("==cell=====", cell)
+		//fmt.Println("==previous=====", previous)
+		//fmt.Println("")
 		cell = Tile{x: previous.x + vector.x, y: previous.y + vector.y}
 	}
 
@@ -127,11 +133,6 @@ func (g *Game) tileMatchesAvailable() bool{
 
 func (g *Game) movesAvailable() bool {
 	return g.grid.cellsAvailable() || g.tileMatchesAvailable()
-
-}
-
-func (g *Game) actuate() {
-	fmt.Println("Update Grid Actuator is called")
 
 }
 
@@ -155,19 +156,16 @@ func (g *Game) move(direction int){
 		for j := 0; j < len(traversals.y); j++{
 			cell := Tile{x: traversals.x[i], y: traversals.y[j]}
 			tile := g.grid.CellContent(&cell)
-			if(tile != nil){
+			if(!tile.isEmpty){
 				farPos, nextPos := g.FindFarthestPosition(cell, vector)
-
+				//fmt.Println("")
 				//fmt.Println("=======================tile===========================", tile)
-				fmt.Println("=======================farPos===========================", farPos)
+				//fmt.Println("=======================farPos===========================", farPos)
 				//fmt.Println("=======================nextPos===========================", nextPos)
-
 				next := g.grid.CellContent(nextPos)
-
-				fmt.Println("=======================farPos===========================", next)
-
+				//fmt.Println("=======================farPos===========================", farPos)
+				//fmt.Println("")
 				if( next != nil && next.value == tile.value /*&& !next.mergedFrom*/){
-					//merge 処理なので後回し
 	//				merged := Tile{x: nextPos.x, y: nextPos.y, value: tile.value * 2}
 	//				tiles := make([]*Tile, 2)
 	//				tiles[0] = tile
@@ -181,22 +179,28 @@ func (g *Game) move(direction int){
 	//
 	//				g.score += merged.value
 				} else {
-	//				g.moveTile(tile, farPos)
+					fmt.Println("=======move======")
+					g.moveTile(tile, farPos)
 				}
-	//			if(!g.positionsEqual(&cell, tile)){
-	//				moved = true
-	//			}
+				if(!g.positionsEqual(&cell, tile)){
+					//moved = true
+				}
 			}
 		}
 	}
 	//
 	//if(moved){
-	//	g.addRandomTile()
+		//g.addRandomTile()
 	//
 	//	if(!g.movesAvailable()){
 	//		g.over = true
 	//	}
 	//
-	//	//g.acutate()
+		g.actuate()
 	//}
+}
+
+func (g *Game) actuate(){
+	g.drawer.redraw(g.grid)
+	//fmt.Println("==========torima=================", g.grid)
 }

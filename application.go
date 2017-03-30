@@ -4,6 +4,7 @@ import (
 	"github.com/nsf/termbox-go"
 	"github.com/mattn/go-runewidth"
 	"strconv"
+	"fmt"
 )
 
 type Tile struct{
@@ -92,28 +93,32 @@ func handleKeyEvent() {
 	}
 }
 
-func gridDraw(grid *Grid){
-	const coldef = termbox.ColorDefault
-	termbox.Clear(coldef, coldef)
-	gameWidth := 100
-	gameHeight := 50
+type Drawer struct{}
 
-	cellWidth := gameWidth / grid.size
-	cellHeight := gameHeight / grid.size
-
-	for ly := 0; ly < grid.size; ly++ {
-		for lx := 0; lx < grid.size; lx++ {
-			tile := grid.cells[ly][lx]
-			drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
-		}
-	}
-
-	termbox.Flush()
+func (d *Drawer)redraw(grid *Grid){
+	gridDraw(grid)
 }
 
-//できたらデータとViewを繋げる
-//できたらTileあたりを肉付け
-//できたらGameの肉付け
+func gridDraw(grid *Grid){
+	//const coldef = termbox.ColorDefault
+	//termbox.Clear(coldef, coldef)
+	//gameWidth := 100
+	//gameHeight := 50
+	//
+	//cellWidth := gameWidth / grid.size
+	//cellHeight := gameHeight / grid.size
+	fmt.Println(grid.cells)
+
+	//for ly := 0; ly < grid.size; ly++ {
+	//	for lx := 0; lx < grid.size; lx++ {
+	//		tile := grid.cells[lx][ly]
+	//		drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+	//	}
+	//}
+
+	//termbox.Flush()
+}
+
 func main() {
 	err := termbox.Init()
 	//Error
@@ -121,7 +126,8 @@ func main() {
 		panic(err)
 	}
 
-	gameState := Game{gridSize: 4}
+	drawer := Drawer{}
+	gameState := Game{gridSize: 4, drawer: &drawer}
 	gameState.setup()
 
 	gridDraw(gameState.grid)
