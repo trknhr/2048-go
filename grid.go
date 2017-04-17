@@ -71,7 +71,6 @@ func (g * Grid) WithinBounds(position *Tile) bool{
 	position.y >= 0 && position.y < g.size
 }
 
-//ここから実装。。。
 func (g *Grid) AvailableCells() [][]Tile{
 	cells := make([][]Tile, g.size)
 

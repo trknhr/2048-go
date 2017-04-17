@@ -77,10 +77,11 @@ func (g *Game) GetVector(direction int) Vector{
 	return res[direction]
 }
 
-func (g *Game) moveTile(tile *Tile, cell *Tile){
+func (g *Game) moveTile(tile *Tile, farPos *Tile){
 	g.grid.removeTile(tile)
-	g.grid.cells[cell.x][cell.y] = Tile{x: tile.x, y: tile.y, value: tile.value, mergedFrom: tile.mergedFrom}
-	tile.updatePosition(cell)
+	g.grid.cells[farPos.x][farPos.y] = Tile{x: tile.x, y: tile.y, value: tile.value, mergedFrom: tile.mergedFrom}
+	g.grid.cells[farPos.x][farPos.y].updatePosition(farPos)
+	tile.updatePosition(farPos)
 }
 
 func (g *Game) IsGameTerminated() bool{
@@ -111,11 +112,6 @@ func (g *Game) FindFarthestPosition(cell Tile, vector Vector) (*Tile, *Tile){
 
 	for g.grid.WithinBounds(&cell) && g.grid.CellAvailable() {
 		previous = cell
-		//fmt.Println("")
-		//fmt.Println("==vector=====", vector)
-		//fmt.Println("==cell=====", cell)
-		//fmt.Println("==previous=====", previous)
-		//fmt.Println("")
 		cell = Tile{x: previous.x + vector.x, y: previous.y + vector.y}
 	}
 
@@ -143,12 +139,13 @@ func (g *Game) move(direction int){
 		return
 	}
 	//
-	//moved := false
+	moved := false
 	//fmt.Println("=======================vector===========================", direction)
 	vector := g.GetVector(direction)
 	//fmt.Println("=======================vector===========================", vector)
 	traversals := g.BuildTraversals(vector)
-	//fmt.Println("=======================moved===========================", traversals)
+	//fmt.Println("=======================traversals.x===========================", traversals.x)
+	//fmt.Println("=======================traversals.y===========================", traversals.x)
 	//fmt.Println("==========================g.gridSize==============================", g.gridSize)
 	//fmt.Println("moved", moved)
 
@@ -156,14 +153,14 @@ func (g *Game) move(direction int){
 		for j := 0; j < len(traversals.y); j++{
 			cell := Tile{x: traversals.x[i], y: traversals.y[j]}
 			tile := g.grid.CellContent(&cell)
-			if(!tile.isEmpty){
+			if(tile != nil && !tile.isEmpty){
 				farPos, nextPos := g.FindFarthestPosition(cell, vector)
 				//fmt.Println("")
 				//fmt.Println("=======================tile===========================", tile)
 				//fmt.Println("=======================farPos===========================", farPos)
-				//fmt.Println("=======================nextPos===========================", nextPos)
+				//fmt.Println("======================nextPos===========================", nextPos)
 				next := g.grid.CellContent(nextPos)
-				//fmt.Println("=======================farPos===========================", farPos)
+				fmt.Println("=======================farPos===========================", farPos)
 				//fmt.Println("")
 				if( next != nil && next.value == tile.value /*&& !next.mergedFrom*/){
 	//				merged := Tile{x: nextPos.x, y: nextPos.y, value: tile.value * 2}
@@ -179,25 +176,27 @@ func (g *Game) move(direction int){
 	//
 	//				g.score += merged.value
 				} else {
-					fmt.Println("=======move======")
 					g.moveTile(tile, farPos)
 				}
+				fmt.Println("========tile===========", tile)
+				fmt.Println("========cell===========", cell)
 				if(!g.positionsEqual(&cell, tile)){
-					//moved = true
+					moved = true
 				}
 			}
 		}
 	}
 	//
-	//if(moved){
+	fmt.Println("moved", moved)
+	if(moved){
 		//g.addRandomTile()
-	//
+
 	//	if(!g.movesAvailable()){
 	//		g.over = true
 	//	}
 	//
 		g.actuate()
-	//}
+	}
 }
 
 func (g *Game) actuate(){

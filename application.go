@@ -107,8 +107,14 @@ func gridDraw(grid *Grid){
 	//
 	//cellWidth := gameWidth / grid.size
 	//cellHeight := gameHeight / grid.size
-	fmt.Println(grid.cells)
+	for ly := 0; ly < grid.size; ly++ {
+		for lx := 0; lx < grid.size; lx++ {
+			if(!grid.cells[lx][ly].isEmpty){
+				fmt.Println("application: " , grid.cells[lx][ly])
+			}
 
+		}
+	}
 	//for ly := 0; ly < grid.size; ly++ {
 	//	for lx := 0; lx < grid.size; lx++ {
 	//		tile := grid.cells[lx][ly]
