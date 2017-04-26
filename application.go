@@ -12,7 +12,7 @@ type Tile struct{
 	y int
 	value int
 	isEmpty bool
-	mergedFrom []*Tile
+	mergedFrom []Tile
 }
 
 func (t *Tile) updatePosition(pos *Tile){
@@ -107,22 +107,24 @@ func gridDraw(grid *Grid){
 	//
 	//cellWidth := gameWidth / grid.size
 	//cellHeight := gameHeight / grid.size
-	for ly := 0; ly < grid.size; ly++ {
-		for lx := 0; lx < grid.size; lx++ {
-			if(!grid.cells[lx][ly].isEmpty){
-				fmt.Println("application: " , grid.cells[lx][ly])
-			}
-
-		}
-	}
 	//for ly := 0; ly < grid.size; ly++ {
 	//	for lx := 0; lx < grid.size; lx++ {
 	//		tile := grid.cells[lx][ly]
 	//		drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
 	//	}
 	//}
-
+	//
 	//termbox.Flush()
+
+	fmt.Println("==========================================")
+	for ly := 0; ly < grid.size; ly++ {
+		for lx := 0; lx < grid.size; lx++ {
+			if(!grid.cells[lx][ly].isEmpty){
+				fmt.Println("application: " , grid.cells[lx][ly])
+			}
+		}
+	}
+	fmt.Println("==========================================")
 }
 
 func main() {

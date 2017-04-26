@@ -22,11 +22,11 @@ func (g *Grid) setup(){
 }
 
 func (g *Grid)randomAvailableCell() Tile{
-	cells := g.cells
+	cells := g.AvailableCells()
 
 	rand.Seed(time.Now().UnixNano())
 	if len(cells) > 0 {
-		return cells[rand.Int31n(int32(g.size))][rand.Int31n(int32(g.size))]
+		return cells[rand.Int31n(int32(len(cells)))]
 	} else {
 		return Tile{isEmpty: true}
 	}
@@ -57,13 +57,14 @@ func (g *Grid) eachCell(callback func(x int, y int, tile Tile)){
 	}
 }
 
-func (g *Grid) CellAvailable() bool{
-	isEmpty := false
-	g.eachCell(func(x int, y int, tile Tile){
-		isEmpty = tile.isEmpty
-	})
+func (g *Grid) CellAvailable(tile *Tile) bool{
+	//isEmpty := false
+	//g.eachCell(func(x int, y int, tile Tile){
+	//	isEmpty = isEmpty || tile.isEmpty
+	//})
+	r := g.CellContent(tile)
 
-	return isEmpty
+	return r != nil && r.isEmpty
 }
 
 func (g * Grid) WithinBounds(position *Tile) bool{
@@ -71,11 +72,15 @@ func (g * Grid) WithinBounds(position *Tile) bool{
 	position.y >= 0 && position.y < g.size
 }
 
-func (g *Grid) AvailableCells() [][]Tile{
-	cells := make([][]Tile, g.size)
+func (g *Grid) AvailableCells() []Tile{
+	cells := make([]Tile, g.size * g.size)
 
+	i := 0
 	g.eachCell(func(x int, y int, tile Tile){
-		cells[x][y] = tile
+		if(tile.isEmpty){
+			cells[i] = tile
+			i += 1
+		}
 	})
 
 	return cells
