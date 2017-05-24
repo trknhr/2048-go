@@ -58,10 +58,6 @@ func (g *Grid) eachCell(callback func(x int, y int, tile Tile)){
 }
 
 func (g *Grid) CellAvailable(tile *Tile) bool{
-	//isEmpty := false
-	//g.eachCell(func(x int, y int, tile Tile){
-	//	isEmpty = isEmpty || tile.isEmpty
-	//})
 	r := g.CellContent(tile)
 
 	return r != nil && r.isEmpty
@@ -73,12 +69,12 @@ func (g * Grid) WithinBounds(position *Tile) bool{
 }
 
 func (g *Grid) AvailableCells() []Tile{
-	cells := make([]Tile, g.size * g.size)
+	var cells []Tile
 
 	i := 0
 	g.eachCell(func(x int, y int, tile Tile){
-		if(tile.isEmpty){
-			cells[i] = tile
+		if tile.isEmpty {
+			cells = append(cells, tile)
 			i += 1
 		}
 	})

@@ -33,15 +33,19 @@ func (g *Game)setup(){
 	g.addStartTiles()
 
 	add("up", func(message *Message){
+		fmt.Println("up")
 		g.move(0)
 	})
 	add("right", func(message *Message){
+		fmt.Println("right")
 		g.move(1)
 	})
 	add("down", func(message *Message){
+		fmt.Println("down")
 		g.move(2)
 	})
 	add("left", func(message *Message){
+		fmt.Println("left")
 		g.move(3)
 	})
 }
@@ -55,7 +59,6 @@ func (g *Game) addStartTiles(){
 }
 
 func (g *Game) addRandomTile(){
-	fmt.Println("=================addRandomTile==g.grid.cellsAvailable()===================", g.grid.cellsAvailable())
 	if g.grid.cellsAvailable() {
 		value := 2
 		if rand.Float32() < 0.9 {
@@ -64,7 +67,6 @@ func (g *Game) addRandomTile(){
 		tile := g.grid.randomAvailableCell()
 		newTile := Tile{x: tile.x, y: tile.y, value: value, isEmpty: false}
 
-		fmt.Println("=================g.grid.insertTile===================", newTile)
 		g.grid.insertTile(newTile)
 	}
 }
@@ -80,11 +82,13 @@ func (g *Game) GetVector(direction int) Vector{
 	return res[direction]
 }
 
-func (g *Game) moveTile(tile *Tile, farPos *Tile){
+/**
+ここを変えたい。。。。updatePositionをどうするか
+ */
+func (g *Game) moveTile(tile *Tile, farPos *Tile) Tile{
 	g.grid.removeTile(tile)
-	g.grid.cells[farPos.x][farPos.y] = Tile{x: tile.x, y: tile.y, value: tile.value, mergedFrom: tile.mergedFrom}
-	g.grid.cells[farPos.x][farPos.y].updatePosition(farPos)
-	tile.updatePosition(farPos)
+	g.grid.cells[farPos.x][farPos.y] = Tile{x: farPos.x, y: farPos.y, value: tile.value, mergedFrom: tile.mergedFrom, isEmpty: false}
+	return g.grid.cells[farPos.x][farPos.y]
 }
 
 func (g *Game) IsGameTerminated() bool{
@@ -114,10 +118,7 @@ func (g *Game) FindFarthestPosition(cell Tile, vector Vector) (*Tile, *Tile){
 	previous := cell
 	isFirst := true
 
-	//fmt.Println("&cell", &cell)
 	for isFirst || (g.grid.WithinBounds(&cell) && g.grid.CellAvailable(&cell)) {
-		//fmt.Println("=========&cell=========", &cell)
-		//fmt.Println("=====g.grid.CellAvailable(&cell)====", g.grid.CellAvailable(&cell))
 		previous = cell
 		cell = Tile{x: previous.x + vector.x, y: previous.y + vector.y}
 
@@ -137,8 +138,7 @@ func (g *Game) tileMatchesAvailable() bool{
 }
 
 func (g *Game) movesAvailable() bool {
-	return g.grid.cellsAvailable() || g.tileMatchesAvailable()
-
+	return g.grid.cellsAvailable()// || g.tileMatchesAvailable()
 }
 
 func (g *Game) move(direction int){
@@ -157,17 +157,8 @@ func (g *Game) move(direction int){
 			cell := Tile{x: traversals.x[i], y: traversals.y[j]}
 			tile := g.grid.CellContent(&cell)
 			if(tile != nil && !tile.isEmpty){
-				//fmt.Println("=======================cell===========================", cell)
-				//fmt.Println("=======================vector===========================", vector)
 				farPos, nextPos := g.FindFarthestPosition(cell, vector)
-				//fmt.Println("")
-				//fmt.Println("=======================tile===========================", tile)
-				//fmt.Println("=======================farPos===========================", farPos)
-				//fmt.Println("======================nextPos===========================", nextPos)
-				//fmt.Println("=====================nextPos============================", nextPos)
 				next := g.grid.CellContent(nextPos)
-				//fmt.Println("=======================farPos===========================", farPos)
-				//fmt.Println("=======================next===========================", next)
 				if( next != nil && next.value == tile.value /*&& !next.mergedFrom*/){
 					merged := Tile{x: nextPos.x, y: nextPos.y, value: tile.value * 2}
 					tiles := make([]Tile, 2)
@@ -178,27 +169,28 @@ func (g *Game) move(direction int){
 					g.grid.insertTile(merged)
 					g.grid.removeTile(tile)
 
+					temp := g.copyTile(tile)
+					tile = &temp
 					tile.updatePosition(nextPos)
 
 					g.score += merged.value
 				} else {
-					//fmt.Println("================moveTile=================")
-					g.moveTile(tile, farPos)
+					temp := g.moveTile(tile, farPos)
+					tile = &temp
 				}
+
 				if(!g.positionsEqual(&cell, tile)){
 					moved = true
 				}
 			}
 		}
 	}
-	//
-	//fmt.Println("moved", moved)
-	if(moved){
+	if !g.movesAvailable() {
+		fmt.Println("game is over")
+	}
+
+	if moved {
 		g.addRandomTile()
-	//	if(!g.movesAvailable()){
-	//		g.over = true
-	//	}
-	//
 		g.actuate()
 	}
 }
@@ -208,6 +200,5 @@ func (g *Game) copyTile(tile *Tile) Tile{
 }
 
 func (g *Game) actuate(){
-	g.drawer.redraw(g.grid)
-	//fmt.Println("==========torima=================", g.grid)
+	g.drawer.redraw(g.grid, g.score)
 }

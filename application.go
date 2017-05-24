@@ -5,6 +5,8 @@ import (
 	"github.com/mattn/go-runewidth"
 	"strconv"
 	"fmt"
+	"bufio"
+	"os"
 )
 
 type Tile struct{
@@ -95,7 +97,7 @@ func handleKeyEvent() {
 
 type Drawer struct{}
 
-func (d *Drawer)redraw(grid *Grid){
+func (d *Drawer)redraw(grid *Grid, score int){
 	gridDraw(grid)
 }
 
@@ -115,24 +117,51 @@ func gridDraw(grid *Grid){
 	//}
 	//
 	//termbox.Flush()
+	//drawCell(grid)
+	dumpCell(grid)
+}
 
+func drawCell(grid *Grid){
+	const coldef = termbox.ColorDefault
+	termbox.Clear(coldef, coldef)
+	gameWidth := 100
+	gameHeight := 50
+
+	cellWidth := gameWidth / grid.size
+	cellHeight := gameHeight / grid.size
+	for ly := 0; ly < grid.size; ly++ {
+		for lx := 0; lx < grid.size; lx++ {
+			tile := grid.cells[lx][ly]
+			drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+		}
+	}
+
+	termbox.Flush()
+
+}
+
+func dumpCell(grid *Grid){
 	fmt.Println("==========================================")
+	sumValue := 0
+	countIsNotEmpty := 0
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			if(!grid.cells[lx][ly].isEmpty){
-				fmt.Println("application: " , grid.cells[lx][ly])
+				sumValue += grid.cells[lx][ly].value
+				countIsNotEmpty  += 1
 			}
 		}
 	}
-	fmt.Println("==========================================")
+	fmt.Println("==================sumValue================", sumValue)
+	fmt.Println("================countIsNotEmpty===========", (16 - countIsNotEmpty))
 }
 
 func main() {
-	err := termbox.Init()
-	//Error
-	if err != nil {
-		panic(err)
-	}
+	//err := termbox.Init()
+	////Error
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	drawer := Drawer{}
 	gameState := Game{gridSize: 4, drawer: &drawer}
@@ -142,5 +171,27 @@ func main() {
 
 	defer termbox.Close()
 
-	handleKeyEvent()
+	//handleKeyEvent()
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		switch scanner.Text() {
+			case "d":
+				dispatch("down", &Message{data: "push left"})
+				break
+			case "l":
+				dispatch("left", &Message{data: "push left"})
+				break
+			case "r":
+				dispatch("right", &Message{data: "push left"})
+				break
+			case "u":
+				dispatch("up", &Message{data: "push left"})
+				break
+			default:
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+
+	}
 }
