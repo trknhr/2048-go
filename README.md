@@ -1,3 +1,5 @@
+ [![Build Status](https://travis-ci.org/1984weed/2048-go.svg?branch=master)](https://travis-ci.org/1984weed/2048-go)
+ 
  # 2048-go
  
 [2048](http://gabrielecirulli.github.io/2048/) in CLI. It's made from Golang 
