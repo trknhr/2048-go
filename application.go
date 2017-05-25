@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"bufio"
 	"os"
+	"flag"
 )
 
 type Tile struct{
@@ -87,10 +88,8 @@ func handleKeyEvent() {
 				dispatch("up", &Message{data: "push left"})
 				break
 			default:
-				//initDraw()
 			}
 		default:
-			//initDraw()
 		}
 	}
 }
@@ -98,27 +97,30 @@ func handleKeyEvent() {
 type Drawer struct{}
 
 func (d *Drawer)redraw(grid *Grid, score int){
-	gridDraw(grid)
+	if debugRun {
+		dumpCell(grid)
+	} else {
+		gridDraw(grid)
+	}
 }
 
 func gridDraw(grid *Grid){
-	//const coldef = termbox.ColorDefault
-	//termbox.Clear(coldef, coldef)
-	//gameWidth := 100
-	//gameHeight := 50
-	//
-	//cellWidth := gameWidth / grid.size
-	//cellHeight := gameHeight / grid.size
-	//for ly := 0; ly < grid.size; ly++ {
-	//	for lx := 0; lx < grid.size; lx++ {
-	//		tile := grid.cells[lx][ly]
-	//		drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
-	//	}
-	//}
-	//
-	//termbox.Flush()
-	//drawCell(grid)
-	dumpCell(grid)
+	const coldef = termbox.ColorDefault
+	termbox.Clear(coldef, coldef)
+	gameWidth := 100
+	gameHeight := 50
+
+	cellWidth := gameWidth / grid.size
+	cellHeight := gameHeight / grid.size
+	for ly := 0; ly < grid.size; ly++ {
+		for lx := 0; lx < grid.size; lx++ {
+			tile := grid.cells[lx][ly]
+			drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+		}
+	}
+
+	termbox.Flush()
+	drawCell(grid)
 }
 
 func drawCell(grid *Grid){
@@ -156,25 +158,23 @@ func dumpCell(grid *Grid){
 	fmt.Println("================countIsNotEmpty===========", (16 - countIsNotEmpty))
 }
 
+
+var (
+	debugRun bool
+)
+
 func main() {
-	//err := termbox.Init()
-	////Error
-	//if err != nil {
-	//	panic(err)
-	//}
+	flag.BoolVar(&debugRun, "debug", false, "debugRun flag")
+	flag.Parse()
 
 	drawer := Drawer{}
 	gameState := Game{gridSize: 4, drawer: &drawer}
 	gameState.setup()
 
-	gridDraw(gameState.grid)
-
-	defer termbox.Close()
-
-	//handleKeyEvent()
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		switch scanner.Text() {
+	if debugRun {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			switch scanner.Text() {
 			case "d":
 				dispatch("down", &Message{data: "push left"})
 				break
@@ -188,10 +188,22 @@ func main() {
 				dispatch("up", &Message{data: "push left"})
 				break
 			default:
+			}
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		if err := scanner.Err(); err != nil {
+			fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		}
+	} else {
+		err := termbox.Init()
+		//Error
+		if err != nil {
+			panic(err)
+		}
 
+		gridDraw(gameState.grid)
+
+		defer termbox.Close()
+
+		handleKeyEvent()
 	}
 }

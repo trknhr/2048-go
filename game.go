@@ -33,19 +33,15 @@ func (g *Game)setup(){
 	g.addStartTiles()
 
 	add("up", func(message *Message){
-		fmt.Println("up")
 		g.move(0)
 	})
 	add("right", func(message *Message){
-		fmt.Println("right")
 		g.move(1)
 	})
 	add("down", func(message *Message){
-		fmt.Println("down")
 		g.move(2)
 	})
 	add("left", func(message *Message){
-		fmt.Println("left")
 		g.move(3)
 	})
 }
