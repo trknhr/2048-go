@@ -2,7 +2,7 @@ package main
 
 import "testing"
 
-func TestIsGameTerminated(t *testing.T){
+func TestIsGameTerminated(t *testing.T) {
 	game := Game{gridSize: 4}
 	actual := game.IsGameTerminated()
 	expected := false

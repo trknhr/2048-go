@@ -1,0 +1,5 @@
+language: go
+install:
+  - go get github.com/1984weed/2048-go
+script:
+  - go test -v

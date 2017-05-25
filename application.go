@@ -1,24 +1,24 @@
 package main
 
 import (
-	"github.com/nsf/termbox-go"
-	"github.com/mattn/go-runewidth"
-	"strconv"
-	"fmt"
 	"bufio"
-	"os"
 	"flag"
+	"fmt"
+	"github.com/mattn/go-runewidth"
+	"github.com/nsf/termbox-go"
+	"os"
+	"strconv"
 )
 
-type Tile struct{
-	x int
-	y int
-	value int
-	isEmpty bool
+type Tile struct {
+	x          int
+	y          int
+	value      int
+	isEmpty    bool
 	mergedFrom []Tile
 }
 
-func (t *Tile) updatePosition(pos *Tile){
+func (t *Tile) updatePosition(pos *Tile) {
 	t.x = pos.x
 	t.y = pos.y
 }
@@ -48,15 +48,15 @@ func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
 	}
 }
 
-func drawSell(tile Tile, left int, top int , cellWidth int, cellHeight int){
+func drawSell(tile Tile, left int, top int, cellWidth int, cellHeight int) {
 	const coldef = termbox.ColorDefault
 
 	fill(left, top, cellWidth, 1, termbox.Cell{Ch: '─'})
 	fill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
-	fill(left, top + cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
-	fill(left + cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
-	if !tile.isEmpty{
-		tbprint(left + cellWidth / 2, top + cellHeight / 2, coldef, coldef, strconv.Itoa(tile.value))
+	fill(left, top+cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
+	fill(left+cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
+	if !tile.isEmpty {
+		tbprint(left+cellWidth/2, top+cellHeight/2, coldef, coldef, strconv.Itoa(tile.value))
 	}
 }
 
@@ -96,7 +96,7 @@ func handleKeyEvent() {
 
 type Drawer struct{}
 
-func (d *Drawer)redraw(grid *Grid, score int){
+func (d *Drawer) redraw(grid *Grid, score int) {
 	if debugRun {
 		dumpCell(grid)
 	} else {
@@ -104,7 +104,7 @@ func (d *Drawer)redraw(grid *Grid, score int){
 	}
 }
 
-func gridDraw(grid *Grid){
+func gridDraw(grid *Grid) {
 	const coldef = termbox.ColorDefault
 	termbox.Clear(coldef, coldef)
 	gameWidth := 100
@@ -115,7 +115,7 @@ func gridDraw(grid *Grid){
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			tile := grid.cells[lx][ly]
-			drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+			drawSell(tile, lx*cellWidth, ly*cellHeight, cellWidth, cellHeight)
 		}
 	}
 
@@ -123,7 +123,7 @@ func gridDraw(grid *Grid){
 	drawCell(grid)
 }
 
-func drawCell(grid *Grid){
+func drawCell(grid *Grid) {
 	const coldef = termbox.ColorDefault
 	termbox.Clear(coldef, coldef)
 	gameWidth := 100
@@ -134,7 +134,7 @@ func drawCell(grid *Grid){
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			tile := grid.cells[lx][ly]
-			drawSell(tile, lx * cellWidth, ly * cellHeight, cellWidth, cellHeight)
+			drawSell(tile, lx*cellWidth, ly*cellHeight, cellWidth, cellHeight)
 		}
 	}
 
@@ -142,22 +142,21 @@ func drawCell(grid *Grid){
 
 }
 
-func dumpCell(grid *Grid){
+func dumpCell(grid *Grid) {
 	fmt.Println("==========================================")
 	sumValue := 0
 	countIsNotEmpty := 0
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
-			if(!grid.cells[lx][ly].isEmpty){
+			if !grid.cells[lx][ly].isEmpty {
 				sumValue += grid.cells[lx][ly].value
-				countIsNotEmpty  += 1
+				countIsNotEmpty += 1
 			}
 		}
 	}
 	fmt.Println("==================sumValue================", sumValue)
 	fmt.Println("================countIsNotEmpty===========", (16 - countIsNotEmpty))
 }
-
 
 var (
 	debugRun bool
