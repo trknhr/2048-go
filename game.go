@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -47,10 +46,8 @@ func (g *Game) setup() {
 }
 
 func (g *Game) addStartTiles() {
-	defaultTiles := [2]Tile{Tile{x: 0, y: 0, value: 2, isEmpty: false}, Tile{x: 0, y: 3, value: 2, isEmpty: false}}
 	for i := 0; i < g.startTiles; i++ {
-		//g.addRandomTile()
-		g.grid.insertTile(defaultTiles[i])
+		g.addRandomTile()
 	}
 }
 
@@ -78,9 +75,6 @@ func (g *Game) GetVector(direction int) Vector {
 	return res[direction]
 }
 
-/**
-ここを変えたい。。。。updatePositionをどうするか
-*/
 func (g *Game) moveTile(tile *Tile, farPos *Tile) Tile {
 	g.grid.removeTile(tile)
 	g.grid.cells[farPos.x][farPos.y] = Tile{x: farPos.x, y: farPos.y, value: tile.value, mergedFrom: tile.mergedFrom, isEmpty: false}
@@ -134,7 +128,7 @@ func (g *Game) tileMatchesAvailable() bool {
 }
 
 func (g *Game) movesAvailable() bool {
-	return g.grid.cellsAvailable() // || g.tileMatchesAvailable()
+	return g.grid.cellsAvailable()
 }
 
 func (g *Game) move(direction int) {
@@ -180,12 +174,12 @@ func (g *Game) move(direction int) {
 			}
 		}
 	}
-	if !g.movesAvailable() {
-		fmt.Println("game is over")
-	}
 
 	if moved {
 		g.addRandomTile()
+		if !g.movesAvailable() {
+			g.over = true
+		}
 		g.actuate()
 	}
 }
@@ -195,5 +189,5 @@ func (g *Game) copyTile(tile *Tile) Tile {
 }
 
 func (g *Game) actuate() {
-	g.drawer.redraw(g.grid, g.score)
+	g.drawer.redraw(g.grid, g.score, g.over)
 }

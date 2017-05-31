@@ -10,6 +10,9 @@ import (
 	"strconv"
 )
 
+const GAME_WIDTH = 80
+const GAME_HEIGHT = 40
+
 type Tile struct {
 	x          int
 	y          int
@@ -23,8 +26,7 @@ func (t *Tile) updatePosition(pos *Tile) {
 	t.y = pos.y
 }
 
-func drawLine(x, y int, str string) {
-	color := termbox.ColorDefault
+func drawMessage(x, y int, str string, color termbox.Attribute){
 	backgroundColor := termbox.ColorDefault
 	runes := []rune(str)
 
@@ -32,11 +34,18 @@ func drawLine(x, y int, str string) {
 		termbox.SetCell(x+i, y, runes[i], color, backgroundColor)
 	}
 }
+func drawLine(x, y int, str string) {
+	drawMessage(x, y, str, termbox.ColorDefault)
+}
 
-func fill(x, y, w, h int, cell termbox.Cell) {
+func defaultColorFill(x, y, w, h int, cell termbox.Cell) {
+	fill(x,y,w,h,cell, termbox.ColorDefault)
+}
+
+func fill(x, y, w, h int, cell termbox.Cell, color termbox.Attribute) {
 	for ly := 0; ly < h; ly++ {
 		for lx := 0; lx < w; lx++ {
-			termbox.SetCell(x+lx, y+ly, cell.Ch, cell.Fg, cell.Bg)
+			termbox.SetCell(x+lx, y+ly, cell.Ch, color, cell.Bg)
 		}
 	}
 }
@@ -51,21 +60,13 @@ func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
 func drawSell(tile Tile, left int, top int, cellWidth int, cellHeight int) {
 	const coldef = termbox.ColorDefault
 
-	fill(left, top, cellWidth, 1, termbox.Cell{Ch: '─'})
-	fill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
-	fill(left, top+cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
-	fill(left+cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
+	defaultColorFill(left, top, cellWidth, 1, termbox.Cell{Ch: '─'})
+	defaultColorFill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
+	defaultColorFill(left, top+cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
+	defaultColorFill(left+cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
 	if !tile.isEmpty {
 		tbprint(left+cellWidth/2, top+cellHeight/2, coldef, coldef, strconv.Itoa(tile.value))
 	}
-}
-
-func drawMessage(msg string) {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-
-	drawLine(0, 0, msg)
-
-	termbox.Flush()
 }
 
 func handleKeyEvent() {
@@ -96,53 +97,65 @@ func handleKeyEvent() {
 
 type Drawer struct{}
 
-func (d *Drawer) redraw(grid *Grid, score int) {
+func (d *Drawer) redraw(grid *Grid, score int, isOver bool) {
 	if debugRun {
-		dumpCell(grid)
+		dumpCell(grid, score, isOver)
 	} else {
-		gridDraw(grid)
+		gridDraw(grid, score, isOver)
 	}
 }
+const GAME_TOP_OFFSET = 1
 
-func gridDraw(grid *Grid) {
+func gridDraw(grid *Grid, score int, isOver bool) {
 	const coldef = termbox.ColorDefault
 	termbox.Clear(coldef, coldef)
-	gameWidth := 100
-	gameHeight := 50
 
-	cellWidth := gameWidth / grid.size
-	cellHeight := gameHeight / grid.size
-	for ly := 0; ly < grid.size; ly++ {
-		for lx := 0; lx < grid.size; lx++ {
-			tile := grid.cells[lx][ly]
-			drawSell(tile, lx*cellWidth, ly*cellHeight, cellWidth, cellHeight)
-		}
+	drawCellNumber(grid)
+
+	//draw score
+	drawScore(score)
+
+	if isOver {
+		drawOver()
 	}
 
 	termbox.Flush()
-	drawCell(grid)
+}
+func drawOver(){
+	gameOver := "Game Over"
+	gameOverLen := len(gameOver)
+
+	lastMessage := "If you quit it, please press ESC"
+
+	top := GAME_HEIGHT / 2
+	width := (GAME_WIDTH - gameOverLen) / 2
+	color := termbox.ColorRed
+
+	fill(0, top, width, 1, termbox.Cell{Ch: '='}, color)
+	drawMessage(width, top, gameOver, color)
+	fill(width + gameOverLen, top, width, 1, termbox.Cell{Ch: '='}, color)
+
+	drawMessage((GAME_WIDTH - len(lastMessage) )/ 2, top  + 1, lastMessage, color)
 }
 
-func drawCell(grid *Grid) {
-	const coldef = termbox.ColorDefault
-	termbox.Clear(coldef, coldef)
-	gameWidth := 100
-	gameHeight := 50
+func drawScore(score int){
+	drawLine(0, 0, fmt.Sprintf("Score: %d", score))
+}
 
-	cellWidth := gameWidth / grid.size
-	cellHeight := gameHeight / grid.size
+func drawCellNumber(grid *Grid) {
+	cellWidth := GAME_WIDTH / grid.size
+	cellHeight := GAME_HEIGHT / grid.size
+
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			tile := grid.cells[lx][ly]
-			drawSell(tile, lx*cellWidth, ly*cellHeight, cellWidth, cellHeight)
+			drawSell(tile, lx*cellWidth, GAME_TOP_OFFSET + ly*cellHeight, cellWidth, cellHeight)
 		}
 	}
 
-	termbox.Flush()
-
 }
 
-func dumpCell(grid *Grid) {
+func dumpCell(grid *Grid, score int, isOver bool) {
 	fmt.Println("==========================================")
 	sumValue := 0
 	countIsNotEmpty := 0
@@ -167,7 +180,7 @@ func main() {
 	flag.Parse()
 
 	drawer := Drawer{}
-	gameState := Game{gridSize: 4, drawer: &drawer}
+	gameState := Game{gridSize: 2, drawer: &drawer}
 	gameState.setup()
 
 	if debugRun {
@@ -199,7 +212,7 @@ func main() {
 			panic(err)
 		}
 
-		gridDraw(gameState.grid)
+		gridDraw(gameState.grid, 0, false)
 
 		defer termbox.Close()
 
