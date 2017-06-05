@@ -8,6 +8,9 @@ import (
 	"github.com/nsf/termbox-go"
 	"os"
 	"strconv"
+	"github.com/BurntSushi/toml"
+	"path/filepath"
+	"log"
 )
 
 const GAME_WIDTH = 80
@@ -103,6 +106,14 @@ func (d *Drawer) redraw(grid *Grid, score int, isOver bool) {
 	} else {
 		gridDraw(grid, score, isOver)
 	}
+
+	info := GameInfo{Score: score, ScoreHistory: []int{}}
+	f, err := os.Create(getFilePath())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	info.save(f)
 }
 const GAME_TOP_OFFSET = 1
 
@@ -121,6 +132,7 @@ func gridDraw(grid *Grid, score int, isOver bool) {
 
 	termbox.Flush()
 }
+
 func drawOver(){
 	gameOver := "Game Over"
 	gameOverLen := len(gameOver)
@@ -171,6 +183,87 @@ func dumpCell(grid *Grid, score int, isOver bool) {
 	fmt.Println("================countIsNotEmpty===========", (16 - countIsNotEmpty))
 }
 
+type GameInfo struct{
+	HighScore int
+	ScoreHistory []int
+}
+
+func fileExists(filename string) bool{
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+func initSetting() error {
+	dir := getDirPath()
+	file := getFilePath()
+
+	var data GameInfo
+
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("cannot create directory: %v", err)
+	}
+
+	if fileExists(file) {
+		if _, err := toml.DecodeFile("game.toml", &data); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	f, err := os.Create(file)
+
+	if err != nil {
+		log.Fatalf("Error creating setting file: %s", err)
+		return err
+	}
+	info := GameInfo{HighScore: 0, ScoreHistory: []int{}}
+	info.save(f)
+
+	return nil
+}
+
+func getDirPath() string{
+	return filepath.Join(os.Getenv("HOME"), ".config", "2048")
+}
+
+func getFilePath() string{
+	return filepath.Join(getDirPath(), "game.toml")
+}
+
+func (g *GameInfo) save(f *os.File) error{
+	if err := toml.NewEncoder(f).Encode(g); err != nil{
+		log.Fatalf("Error encoding TOML: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func controlFromCommand(){
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		switch scanner.Text() {
+		case "d":
+			dispatch("down", &Message{data: "push left"})
+			break
+		case "l":
+			dispatch("left", &Message{data: "push left"})
+			break
+		case "r":
+			dispatch("right", &Message{data: "push left"})
+			break
+		case "u":
+			dispatch("up", &Message{data: "push left"})
+			break
+		default:
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+	}
+}
+
 var (
 	debugRun bool
 )
@@ -179,32 +272,14 @@ func main() {
 	flag.BoolVar(&debugRun, "debug", false, "debugRun flag")
 	flag.Parse()
 
+	initSetting()
+
 	drawer := Drawer{}
 	gameState := Game{gridSize: 2, drawer: &drawer}
 	gameState.setup()
 
 	if debugRun {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			switch scanner.Text() {
-			case "d":
-				dispatch("down", &Message{data: "push left"})
-				break
-			case "l":
-				dispatch("left", &Message{data: "push left"})
-				break
-			case "r":
-				dispatch("right", &Message{data: "push left"})
-				break
-			case "u":
-				dispatch("up", &Message{data: "push left"})
-				break
-			default:
-			}
-		}
-		if err := scanner.Err(); err != nil {
-			fmt.Fprintln(os.Stderr, "reading standard input:", err)
-		}
+		controlFromCommand()
 	} else {
 		err := termbox.Init()
 		//Error
@@ -219,3 +294,4 @@ func main() {
 		handleKeyEvent()
 	}
 }
+
