@@ -24,12 +24,15 @@ type PositionTraversal struct {
 	y []int
 }
 
-func (g *Game) setup() {
+func (g *Game) setup(preTiles [][]Tile) {
 	g.score = 0
 	g.startTiles = 2
 	g.grid = &Grid{size: g.gridSize}
-	g.grid.setup()
-	g.addStartTiles()
+	g.grid.setup(preTiles)
+
+	if len(preTiles) == 0 {
+		g.addStartTiles()
+	}
 
 	add("up", func(message *Message) {
 		g.move(0)
@@ -122,13 +125,31 @@ func (g *Game) positionsEqual(first *Tile, second *Tile) bool {
 	return first.x == second.x && first.y == second.y
 }
 
-//Todo, I have to implement later...
 func (g *Game) tileMatchesAvailable() bool {
-	return true
+	for y := 0; y < g.grid.size; y++ {
+		for x := 0; x < g.grid.size; x++ {
+			t := g.grid.CellContent(&Tile{x: x, y: y})
+
+			if !t.isEmpty {
+				for d := 0; d < 4; d++ {
+					vec := g.GetVector(d)
+					cell := Tile{x: x + vec.x, y: y + vec.y}
+
+					o := g.grid.CellContent(&cell)
+
+					if o != nil && !o.isEmpty && o.value == t.value {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 func (g *Game) movesAvailable() bool {
-	return g.grid.cellsAvailable()
+	return g.grid.cellsAvailable() || g.tileMatchesAvailable()
 }
 
 func (g *Game) move(direction int) {
@@ -143,12 +164,14 @@ func (g *Game) move(direction int) {
 
 	for i := 0; i < len(traversals.x); i++ {
 		for j := 0; j < len(traversals.y); j++ {
+
 			cell := Tile{x: traversals.x[i], y: traversals.y[j]}
 			tile := g.grid.CellContent(&cell)
+
 			if tile != nil && !tile.isEmpty {
 				farPos, nextPos := g.FindFarthestPosition(cell, vector)
 				next := g.grid.CellContent(nextPos)
-				if next != nil && next.value == tile.value /*&& !next.mergedFrom*/ {
+				if next != nil && next.value == tile.value{
 					merged := Tile{x: nextPos.x, y: nextPos.y, value: tile.value * 2}
 					tiles := make([]Tile, 2)
 					tiles[0] = g.copyTile(tile)

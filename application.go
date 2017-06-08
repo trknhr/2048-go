@@ -100,6 +100,9 @@ func handleKeyEvent() {
 
 type Drawer struct{}
 
+type Temp struct {
+	str string
+}
 func (d *Drawer) redraw(grid *Grid, score int, isOver bool) {
 	if debugRun {
 		dumpCell(grid, score, isOver)
@@ -107,14 +110,36 @@ func (d *Drawer) redraw(grid *Grid, score int, isOver bool) {
 		gridDraw(grid, score, isOver)
 	}
 
-	info := GameInfo{Score: score, ScoreHistory: []int{}}
+	info := GameInfo{HighScore: score, TileState: tileToPrimitive(grid.cells)}
+
 	f, err := os.Create(getFilePath())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("====", err)
 	}
 
 	info.save(f)
 }
+func tileToPrimitive(t [][]Tile) [][][]int{
+	p := [][][]int{}
+	for ly := 0; ly < len(t); ly++ {
+		r := [][]int{}
+		for lx := 0; lx < len(t[ly]); lx++ {
+			tt := t[ly][lx]
+			var v int
+
+			if tt.isEmpty {
+				v = 0
+			} else {
+				v = tt.value
+			}
+			r = append(r, []int{tt.x, tt.y, v})
+		}
+		p = append(p, r)
+	}
+
+	return p
+}
+
 const GAME_TOP_OFFSET = 1
 
 func gridDraw(grid *Grid, score int, isOver bool) {
@@ -175,17 +200,20 @@ func dumpCell(grid *Grid, score int, isOver bool) {
 		for lx := 0; lx < grid.size; lx++ {
 			if !grid.cells[lx][ly].isEmpty {
 				sumValue += grid.cells[lx][ly].value
+				fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
+				fmt.Println("==========================================", grid.cells[ly][lx].x, grid.cells[ly][lx].y, grid.cells[ly][lx].value)
 				countIsNotEmpty += 1
 			}
 		}
 	}
+	fmt.Println("==========================================")
 	fmt.Println("==================sumValue================", sumValue)
 	fmt.Println("================countIsNotEmpty===========", (16 - countIsNotEmpty))
 }
 
 type GameInfo struct{
 	HighScore int
-	ScoreHistory []int
+	TileState [][][]int
 }
 
 func fileExists(filename string) bool{
@@ -193,21 +221,25 @@ func fileExists(filename string) bool{
 	return err == nil
 }
 
-func initSetting() error {
+func (g *GameInfo)load() error {
 	dir := getDirPath()
 	file := getFilePath()
 
-	var data GameInfo
 
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return fmt.Errorf("cannot create directory: %v", err)
 	}
 
+	var data GameInfo
 	if fileExists(file) {
-		if _, err := toml.DecodeFile("game.toml", &data); err != nil {
+		if _, err := toml.DecodeFile(file, &data); err != nil {
 			return err
 		}
 
+		fmt.Println("load success")
+		g.HighScore = data.HighScore
+		g.TileState = data.TileState
+		// ここでloadの処理を行う
 		return nil
 	}
 
@@ -217,14 +249,36 @@ func initSetting() error {
 		log.Fatalf("Error creating setting file: %s", err)
 		return err
 	}
-	info := GameInfo{HighScore: 0, ScoreHistory: []int{}}
-	info.save(f)
+	g.HighScore = 0
+	g.save(f)
 
 	return nil
 }
 
+func (g *GameInfo) getTiles() [][]Tile{
+	res := [][]Tile{}
+
+	for ly := 0; ly < len(g.TileState); ly++ {
+		r := []Tile{}
+		for lx := 0; lx < len(g.TileState[ly]); lx++ {
+			v := g.TileState[ly][lx]
+			var e bool
+			if v[2] == 0 {
+				e = true
+			} else {
+				e = false
+			}
+			r = append(r, Tile{x: v[0], y: v[1], value: v[2], isEmpty: e})
+		}
+		res = append(res, r)
+	}
+
+	return res
+}
+
 func getDirPath() string{
-	return filepath.Join(os.Getenv("HOME"), ".config", "2048")
+	//return filepath.Join(os.Getenv("HOME"), ".config", "2048")
+	return filepath.Join(".", ".config", "2048")
 }
 
 func getFilePath() string{
@@ -272,11 +326,12 @@ func main() {
 	flag.BoolVar(&debugRun, "debug", false, "debugRun flag")
 	flag.Parse()
 
-	initSetting()
+	var gInfo GameInfo
+	gInfo.load()
 
 	drawer := Drawer{}
-	gameState := Game{gridSize: 2, drawer: &drawer}
-	gameState.setup()
+	gameState := Game{gridSize: 4, drawer: &drawer}
+	gameState.setup(gInfo.getTiles())
 
 	if debugRun {
 		controlFromCommand()
@@ -294,4 +349,3 @@ func main() {
 		handleKeyEvent()
 	}
 }
-
