@@ -4,17 +4,18 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
-	"os"
-	"strconv"
-	"github.com/BurntSushi/toml"
-	"path/filepath"
 	"log"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 const GAME_WIDTH = 80
 const GAME_HEIGHT = 40
+const GAME_TOP_OFFSET = 1
 
 type Tile struct {
 	x          int
@@ -29,7 +30,7 @@ func (t *Tile) updatePosition(pos *Tile) {
 	t.y = pos.y
 }
 
-func drawMessage(x, y int, str string, color termbox.Attribute){
+func drawMessage(x, y int, str string, color termbox.Attribute) {
 	backgroundColor := termbox.ColorDefault
 	runes := []rune(str)
 
@@ -37,12 +38,13 @@ func drawMessage(x, y int, str string, color termbox.Attribute){
 		termbox.SetCell(x+i, y, runes[i], color, backgroundColor)
 	}
 }
+
 func drawLine(x, y int, str string) {
 	drawMessage(x, y, str, termbox.ColorDefault)
 }
 
 func defaultColorFill(x, y, w, h int, cell termbox.Cell) {
-	fill(x,y,w,h,cell, termbox.ColorDefault)
+	fill(x, y, w, h, cell, termbox.ColorDefault)
 }
 
 func fill(x, y, w, h int, cell termbox.Cell, color termbox.Attribute) {
@@ -103,23 +105,31 @@ type Drawer struct{}
 type Temp struct {
 	str string
 }
-func (d *Drawer) redraw(grid *Grid, score int, isOver bool) {
+
+func (d *Drawer) redraw(grid *Grid, score int, highScore int, isOver bool) {
 	if debugRun {
-		dumpCell(grid, score, isOver)
+		dumpCell(grid, score, highScore, isOver)
 	} else {
-		gridDraw(grid, score, isOver)
+		gridDraw(grid, score, highScore, isOver)
 	}
 
-	info := GameInfo{HighScore: score, TileState: tileToPrimitive(grid.cells)}
+	var info GameInfo
+
+	if isOver {
+		info =  GameInfo{HighScore: score}
+	} else {
+		info = GameInfo{HighScore: score, CurrentScore: score, TileState: tileToPrimitive(grid.cells)}
+	}
 
 	f, err := os.Create(getFilePath())
 	if err != nil {
-		log.Fatal("====", err)
+		log.Fatal("The writing to the file error: ", err)
 	}
 
 	info.save(f)
 }
-func tileToPrimitive(t [][]Tile) [][][]int{
+
+func tileToPrimitive(t [][]Tile) [][][]int {
 	p := [][][]int{}
 	for ly := 0; ly < len(t); ly++ {
 		r := [][]int{}
@@ -140,9 +150,7 @@ func tileToPrimitive(t [][]Tile) [][][]int{
 	return p
 }
 
-const GAME_TOP_OFFSET = 1
-
-func gridDraw(grid *Grid, score int, isOver bool) {
+func gridDraw(grid *Grid, score int, highScore int, isOver bool) {
 	const coldef = termbox.ColorDefault
 	termbox.Clear(coldef, coldef)
 
@@ -150,6 +158,7 @@ func gridDraw(grid *Grid, score int, isOver bool) {
 
 	//draw score
 	drawScore(score)
+	drawHighScore(highScore)
 
 	if isOver {
 		drawOver()
@@ -158,7 +167,7 @@ func gridDraw(grid *Grid, score int, isOver bool) {
 	termbox.Flush()
 }
 
-func drawOver(){
+func drawOver() {
 	gameOver := "Game Over"
 	gameOverLen := len(gameOver)
 
@@ -170,13 +179,18 @@ func drawOver(){
 
 	fill(0, top, width, 1, termbox.Cell{Ch: '='}, color)
 	drawMessage(width, top, gameOver, color)
-	fill(width + gameOverLen, top, width, 1, termbox.Cell{Ch: '='}, color)
+	fill(width+gameOverLen, top, width, 1, termbox.Cell{Ch: '='}, color)
 
-	drawMessage((GAME_WIDTH - len(lastMessage) )/ 2, top  + 1, lastMessage, color)
+	drawMessage((GAME_WIDTH-len(lastMessage))/2, top+1, lastMessage, color)
 }
 
-func drawScore(score int){
+func drawScore(score int) {
 	drawLine(0, 0, fmt.Sprintf("Score: %d", score))
+}
+
+func drawHighScore(score int) {
+	highScoreMsg := fmt.Sprintf("High Score: %d", score)
+	drawLine(GAME_WIDTH-len(highScoreMsg), 0, highScoreMsg)
 }
 
 func drawCellNumber(grid *Grid) {
@@ -186,60 +200,55 @@ func drawCellNumber(grid *Grid) {
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			tile := grid.cells[lx][ly]
-			drawSell(tile, lx*cellWidth, GAME_TOP_OFFSET + ly*cellHeight, cellWidth, cellHeight)
+			drawSell(tile, lx*cellWidth, GAME_TOP_OFFSET+ly*cellHeight, cellWidth, cellHeight)
 		}
 	}
 
 }
 
-func dumpCell(grid *Grid, score int, isOver bool) {
-	fmt.Println("==========================================")
+func dumpCell(grid *Grid, score int, highScore int, isOver bool) {
 	sumValue := 0
 	countIsNotEmpty := 0
 	for ly := 0; ly < grid.size; ly++ {
 		for lx := 0; lx < grid.size; lx++ {
 			if !grid.cells[lx][ly].isEmpty {
 				sumValue += grid.cells[lx][ly].value
-				fmt.Println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
 				fmt.Println("==========================================", grid.cells[ly][lx].x, grid.cells[ly][lx].y, grid.cells[ly][lx].value)
 				countIsNotEmpty += 1
 			}
 		}
 	}
-	fmt.Println("==========================================")
+	fmt.Println("==================isOver================", isOver)
 	fmt.Println("==================sumValue================", sumValue)
 	fmt.Println("================countIsNotEmpty===========", (16 - countIsNotEmpty))
 }
 
-type GameInfo struct{
+type GameInfo struct {
 	HighScore int
+	CurrentScore int
 	TileState [][][]int
 }
 
-func fileExists(filename string) bool{
+func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
 }
 
-func (g *GameInfo)load() error {
+func (g *GameInfo) load() error {
 	dir := getDirPath()
 	file := getFilePath()
 
-
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return fmt.Errorf("cannot create directory: %v", err)
+		fmt.Errorf("Error, cannot create directory: %v", err)
+		return err
 	}
 
-	var data GameInfo
+	//var data GameInfo
 	if fileExists(file) {
-		if _, err := toml.DecodeFile(file, &data); err != nil {
+		if _, err := toml.DecodeFile(file, g); err != nil {
 			return err
 		}
 
-		fmt.Println("load success")
-		g.HighScore = data.HighScore
-		g.TileState = data.TileState
-		// ここでloadの処理を行う
 		return nil
 	}
 
@@ -250,12 +259,13 @@ func (g *GameInfo)load() error {
 		return err
 	}
 	g.HighScore = 0
+	g.CurrentScore = 0
 	g.save(f)
 
 	return nil
 }
 
-func (g *GameInfo) getTiles() [][]Tile{
+func (g *GameInfo) getTiles() [][]Tile {
 	res := [][]Tile{}
 
 	for ly := 0; ly < len(g.TileState); ly++ {
@@ -276,17 +286,16 @@ func (g *GameInfo) getTiles() [][]Tile{
 	return res
 }
 
-func getDirPath() string{
-	//return filepath.Join(os.Getenv("HOME"), ".config", "2048")
-	return filepath.Join(".", ".config", "2048")
+func getDirPath() string {
+	return filepath.Join(os.Getenv("HOME"), ".config", "2048")
 }
 
-func getFilePath() string{
+func getFilePath() string {
 	return filepath.Join(getDirPath(), "game.toml")
 }
 
-func (g *GameInfo) save(f *os.File) error{
-	if err := toml.NewEncoder(f).Encode(g); err != nil{
+func (g *GameInfo) save(f *os.File) error {
+	if err := toml.NewEncoder(f).Encode(g); err != nil {
 		log.Fatalf("Error encoding TOML: %s", err)
 		return err
 	}
@@ -294,7 +303,7 @@ func (g *GameInfo) save(f *os.File) error{
 	return nil
 }
 
-func controlFromCommand(){
+func controlFromCommand() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		switch scanner.Text() {
@@ -327,25 +336,25 @@ func main() {
 	flag.Parse()
 
 	var gInfo GameInfo
-	gInfo.load()
+	err := gInfo.load()
 
 	drawer := Drawer{}
 	gameState := Game{gridSize: 4, drawer: &drawer}
-	gameState.setup(gInfo.getTiles())
+	gameState.setup(gInfo)
 
 	if debugRun {
 		controlFromCommand()
 	} else {
-		err := termbox.Init()
-		//Error
-		if err != nil {
-			panic(err)
-		}
+		err = termbox.Init()
 
-		gridDraw(gameState.grid, 0, false)
+		gridDraw(gameState.grid, gameState.score, gameState.highScore, false)
 
 		defer termbox.Close()
 
 		handleKeyEvent()
+	}
+
+	if err != nil {
+		panic(err)
 	}
 }

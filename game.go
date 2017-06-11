@@ -6,8 +6,8 @@ import (
 
 type Game struct {
 	gridSize   int
-	startTiles int
 	score      int
+	highScore  int
 	over       bool
 	won        bool
 	grid       *Grid
@@ -24,14 +24,15 @@ type PositionTraversal struct {
 	y []int
 }
 
-func (g *Game) setup(preTiles [][]Tile) {
-	g.score = 0
-	g.startTiles = 2
+func (g *Game) setup(gameInfo GameInfo) {
 	g.grid = &Grid{size: g.gridSize}
-	g.grid.setup(preTiles)
+	g.grid.setup(gameInfo.getTiles())
 
-	if len(preTiles) == 0 {
-		g.addStartTiles()
+	g.highScore = gameInfo.HighScore
+	g.score = gameInfo.CurrentScore
+
+	if len(gameInfo.getTiles()) == 0 {
+		g.addStartTiles(2)
 	}
 
 	add("up", func(message *Message) {
@@ -48,8 +49,8 @@ func (g *Game) setup(preTiles [][]Tile) {
 	})
 }
 
-func (g *Game) addStartTiles() {
-	for i := 0; i < g.startTiles; i++ {
+func (g *Game) addStartTiles(startTileNum int) {
+	for i := 0; i < startTileNum; i++ {
 		g.addRandomTile()
 	}
 }
@@ -171,7 +172,7 @@ func (g *Game) move(direction int) {
 			if tile != nil && !tile.isEmpty {
 				farPos, nextPos := g.FindFarthestPosition(cell, vector)
 				next := g.grid.CellContent(nextPos)
-				if next != nil && next.value == tile.value{
+				if next != nil && next.value == tile.value {
 					merged := Tile{x: nextPos.x, y: nextPos.y, value: tile.value * 2}
 					tiles := make([]Tile, 2)
 					tiles[0] = g.copyTile(tile)
@@ -205,6 +206,10 @@ func (g *Game) move(direction int) {
 		}
 		g.actuate()
 	}
+
+	if g.score > g.highScore {
+		g.highScore = g.score
+	}
 }
 
 func (g *Game) copyTile(tile *Tile) Tile {
@@ -212,5 +217,5 @@ func (g *Game) copyTile(tile *Tile) Tile {
 }
 
 func (g *Game) actuate() {
-	g.drawer.redraw(g.grid, g.score, g.over)
+	g.drawer.redraw(g.grid, g.score, g.highScore, g.over)
 }

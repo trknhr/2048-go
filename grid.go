@@ -11,7 +11,7 @@ type Grid struct {
 }
 
 func (g *Grid) setup(preTiles [][]Tile) {
-	if len(preTiles) > 0{
+	if len(preTiles) > 0 {
 		g.cells = preTiles
 	} else {
 		g.cells = make([][]Tile, g.size)
