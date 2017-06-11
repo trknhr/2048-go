@@ -7,7 +7,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -121,12 +120,16 @@ func (d *Drawer) redraw(grid *Grid, score int, highScore int, isOver bool) {
 		info = GameInfo{HighScore: score, CurrentScore: score, TileState: tileToPrimitive(grid.cells)}
 	}
 
-	f, err := os.Create(getFilePath())
-	if err != nil {
-		log.Fatal("The writing to the file error: ", err)
+	var f *os.File
+	var err error
+
+	if f, err = os.Create(getFilePath()); err != nil {
+		panic(err)
 	}
 
-	info.save(f)
+	if err = info.save(f); err != nil {
+		panic(err)
+	}
 }
 
 func tileToPrimitive(t [][]Tile) [][][]int {
@@ -238,29 +241,30 @@ func (g *GameInfo) load() error {
 	dir := getDirPath()
 	file := getFilePath()
 
+	var err error
+	var f *os.File
+
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		fmt.Errorf("Error, cannot create directory: %v", err)
 		return err
 	}
 
-	//var data GameInfo
 	if fileExists(file) {
 		if _, err := toml.DecodeFile(file, g); err != nil {
 			return err
 		}
-
 		return nil
 	}
 
-	f, err := os.Create(file)
-
-	if err != nil {
-		log.Fatalf("Error creating setting file: %s", err)
+	if f, err = os.Create(file); err != nil {
 		return err
 	}
+
 	g.HighScore = 0
 	g.CurrentScore = 0
-	g.save(f)
+
+	if err != g.save(f) {
+		return err
+	}
 
 	return nil
 }
@@ -296,15 +300,15 @@ func getFilePath() string {
 
 func (g *GameInfo) save(f *os.File) error {
 	if err := toml.NewEncoder(f).Encode(g); err != nil {
-		log.Fatalf("Error encoding TOML: %s", err)
 		return err
 	}
 
 	return nil
 }
 
-func controlFromCommand() {
+func controlFromCommand() error {
 	scanner := bufio.NewScanner(os.Stdin)
+
 	for scanner.Scan() {
 		switch scanner.Text() {
 		case "d":
@@ -322,9 +326,12 @@ func controlFromCommand() {
 		default:
 		}
 	}
+
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+		return err
 	}
+
+	return nil
 }
 
 var (
@@ -343,7 +350,7 @@ func main() {
 	gameState.setup(gInfo)
 
 	if debugRun {
-		controlFromCommand()
+		err = controlFromCommand()
 	} else {
 		err = termbox.Init()
 
