@@ -14,6 +14,13 @@ This app works on command and helps your sabotage.
 
 You should install go
 
+# License
+
+2048-go is licensed under the [MIT license.](https://github.com/1984weed/2048-go/blob/master/LICENSE.txt)
+
+
+
+
 ## Mac
 
 I only checked this environment.
