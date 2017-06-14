@@ -1,5 +1,13 @@
 language: go
-install:
-  - go get github.com/1984weed/2048-go
+go:
+  - 1.8
+  - tip
+
+before_install:
+  - go get -t -v ./...
+
 script:
-  - go test -v
+  - go test -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)
