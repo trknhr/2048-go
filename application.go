@@ -115,7 +115,7 @@ func (d *Drawer) redraw(grid *Grid, score int, highScore int, isOver bool) {
 	var info GameInfo
 
 	if isOver {
-		info =  GameInfo{HighScore: score}
+		info = GameInfo{HighScore: score}
 	} else {
 		info = GameInfo{HighScore: score, CurrentScore: score, TileState: tileToPrimitive(grid.cells)}
 	}
@@ -227,9 +227,9 @@ func dumpCell(grid *Grid, score int, highScore int, isOver bool) {
 }
 
 type GameInfo struct {
-	HighScore int
+	HighScore    int
 	CurrentScore int
-	TileState [][][]int
+	TileState    [][][]int
 }
 
 func fileExists(filename string) bool {

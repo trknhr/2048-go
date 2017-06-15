@@ -5,13 +5,13 @@ import (
 )
 
 type Game struct {
-	gridSize   int
-	score      int
-	highScore  int
-	over       bool
-	won        bool
-	grid       *Grid
-	drawer     *Drawer
+	gridSize  int
+	score     int
+	highScore int
+	over      bool
+	won       bool
+	grid      *Grid
+	drawer    *Drawer
 }
 
 type Vector struct {
@@ -68,7 +68,7 @@ func (g *Game) addRandomTile() {
 	}
 }
 
-func (g *Game) GetVector(direction int) Vector {
+func (g *Game) getVector(direction int) Vector {
 	res := make(map[int]Vector)
 
 	res[0] = Vector{x: 0, y: -1} // Up
@@ -133,7 +133,7 @@ func (g *Game) tileMatchesAvailable() bool {
 
 			if !t.isEmpty {
 				for d := 0; d < 4; d++ {
-					vec := g.GetVector(d)
+					vec := g.getVector(d)
 					cell := Tile{x: x + vec.x, y: y + vec.y}
 
 					o := g.grid.CellContent(&cell)
@@ -160,7 +160,7 @@ func (g *Game) move(direction int) {
 	}
 
 	moved := false
-	vector := g.GetVector(direction)
+	vector := g.getVector(direction)
 	traversals := g.BuildTraversals(vector)
 
 	for i := 0; i < len(traversals.x); i++ {
