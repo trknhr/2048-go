@@ -98,11 +98,11 @@ func (g *Game) BuildTraversals(vec Vector) PositionTraversal {
 	}
 
 	if vec.x == 1 {
-		traversals.x = ReverseList(traversals.x)
+		ReverseList(traversals.x)
 	}
 
 	if vec.y == 1 {
-		traversals.y = ReverseList(traversals.y)
+		ReverseList(traversals.y)
 	}
 
 	return traversals

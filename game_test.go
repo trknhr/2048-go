@@ -108,6 +108,82 @@ func TestMoveTile(t *testing.T) {
 	}
 }
 
+var up Vector = Vector{x: 0, y: -1}
+var right Vector = Vector{x: 1, y: 0}
+var down Vector = Vector{x: 0, y: 1}
+var left Vector = Vector{x: -1, y: 0}
+
+func TestBuildTraversals(t *testing.T){
+	game := Game{gridSize: 4}
+
+	var expected PositionTraversal
+
+	//up
+	expected = PositionTraversal{x: []int{0, 1, 2, 3}, y: []int{0, 1, 2, 3}}
+	checkPositionTraversal(game.BuildTraversals(up), expected, t)
+
+	//left
+	expected = PositionTraversal{x: []int{0, 1, 2, 3}, y: []int{0, 1, 2, 3}}
+	checkPositionTraversal(game.BuildTraversals(left), expected, t)
+
+	//down
+	expected = PositionTraversal{x: []int{0, 1, 2, 3}, y: []int{3, 2, 1, 0}}
+	checkPositionTraversal(game.BuildTraversals(down), expected, t)
+
+	//right
+	expected = PositionTraversal{x: []int{3, 2, 1, 0}, y: []int{0, 1, 2, 3}}
+	checkPositionTraversal(game.BuildTraversals(right), expected, t)
+}
+
+func TestFindFarthestPosition(t *testing.T){
+	game := Game{gridSize: 4}
+	game.setup(GameInfo{TileState: createTileState(4, [][]int{[]int{3, 3}, []int{0, 3}}) })
+
+	actualNext, actualFar := game.FindFarthestPosition(Tile{x: 0, y: 0}, down)
+
+	if actualNext.x != 0  || actualNext.y != 3 {
+		t.Errorf("Next cell should be 0, 3", actualNext)
+	}
+
+	if actualFar.x != 0  || actualFar.y != 4 {
+		t.Errorf("Next cell should be 0, 4", actualFar)
+	}
+
+	actualNext, actualFar = game.FindFarthestPosition(Tile{x: 0, y: 0}, left)
+
+	if actualNext.x != 0  || actualNext.y != 0 {
+		t.Errorf("Next cell should be 0, 0", actualNext)
+	}
+
+	if actualFar.x != -1  || actualFar.y != 0 {
+		t.Errorf("Next cell should be -1, 0", actualFar)
+	}
+
+	actualNext, actualFar = game.FindFarthestPosition(Tile{x: 0, y: 0}, right)
+	if actualNext.x != 2  || actualNext.y != 0 {
+		t.Errorf("Next cell should be 2, 0", actualNext)
+	}
+
+	if actualFar.x != 3 || actualFar.y != 0 {
+		t.Errorf("Next cell should be 3, 0", actualFar)
+	}
+}
+
+func checkPositionTraversal(actual PositionTraversal, expected PositionTraversal, t *testing.T){
+	for i := 0; i < len(actual.x); i++ {
+		if actual.x[i] != expected.x[i] {
+			t.Errorf("The actual posiion x %v should be equal to %v at index %v", actual.x[i], expected.x[i], i)
+		}
+	}
+
+	for i := 0; i < len(actual.y); i++ {
+		if actual.y[i] != expected.y[i] {
+			t.Errorf("The actual position y %v should be equal to %v at index %v", actual.y[i], expected.y[i], i)
+		}
+	}
+}
+
+
 func createTileState(gridSize int, pos [][]int) [][][]int{
 	p := [][][]int{}
 
