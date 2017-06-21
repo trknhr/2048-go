@@ -3,7 +3,7 @@ go:
   - 1.8
 
 before_install:
-  - go get -t -v ./...
+  - go get github.com/1984weed/2048-go
 
 script:
   - go test -coverprofile=coverage.txt -covermode=atomic
