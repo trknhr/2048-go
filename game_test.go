@@ -169,6 +169,127 @@ func TestFindFarthestPosition(t *testing.T){
 	}
 }
 
+func TestPositionsEqual(t *testing.T){
+	game := Game{gridSize: 4}
+
+	if game.positionsEqual(&Tile{x: 1, y: 1}, &Tile{x: 1, y: 1}) != true {
+		t.Error("positionsEqual should be true")
+	}
+
+	if game.positionsEqual(&Tile{x: 0, y: 1}, &Tile{x: 1, y: 1}) != false {
+		t.Error("positionsEqual should be false")
+	}
+}
+
+func TestTileMatchesAvailable(t *testing.T){
+	game := Game{gridSize: 4}
+	gameInfo := GameInfo{TileState: createTileState(4, [][]int{[]int{3, 3}, []int{0, 3}}) }
+	game.setup(gameInfo)
+
+	if game.tileMatchesAvailable() != false {
+		t.Error("The game still has empty cells. So it should return false")
+	}
+	gameInfo = GameInfo{TileState: createFullTileState(4, []int{2, 2}) }
+	game.setup(gameInfo)
+	if game.tileMatchesAvailable() != true {
+		t.Error("The game still has empty cells. So it should return true")
+	}
+
+	gameInfo = GameInfo{
+			TileState: createFullTileState(4,
+			[]int{
+				2, 4, 2, 4,
+				4, 2, 4, 2,
+				2, 4, 2, 4,
+				4, 2, 4, 2,
+		})}
+	game.setup(gameInfo)
+	if game.tileMatchesAvailable() != false {
+		t.Error("The game still has empty cells. So it should return true")
+	}
+}
+
+func TestMovesAvailable(t *testing.T){
+	game := Game{gridSize: 4}
+	gameInfo := GameInfo{TileState: createTileState(4, [][]int{[]int{3, 3}, []int{0, 3}}) }
+	game.setup(gameInfo)
+
+	if game.movesAvailable() != true {
+		t.Error("The game still has empty cells. So it should return false")
+	}
+
+	gameInfo = GameInfo{TileState: createFullTileState(4, []int{2, 2}) }
+	game.setup(gameInfo)
+	if game.movesAvailable() != true {
+		t.Error("The game still has empty cells. So it should return true")
+	}
+
+	gameInfo = GameInfo{
+		TileState: createFullTileState(4,
+			[]int{
+				2, 4, 2, 4,
+				4, 2, 4, 2,
+				2, 4, 2, 4,
+				4, 2, 4, 2,
+			})}
+	game.setup(gameInfo)
+	if game.movesAvailable() != false {
+		t.Error("The game still has empty cells. So it should return true")
+	}
+}
+
+const moveUp = 0
+const moveRight = 1
+const moveDown = 2
+const moveLeft = 3
+
+func TestUpMoveItDoesntMerge(t *testing.T){
+	checkMoveTileDosentMerge(moveUp, [][]int{[]int{0, 0, 2}, []int{3, 3, 4}}, []Tile{Tile{x: 0, y: 0, value:2}, Tile{x: 3, y: 0, value: 4}}, t)
+}
+
+func TestRightMoveItDoesntMerge(t *testing.T){
+	checkMoveTileDosentMerge(moveRight, [][]int{[]int{0, 0, 2}, []int{3, 3, 4}}, []Tile{Tile{x: 3, y: 0, value:2}, Tile{x: 3, y: 3, value:4}}, t)
+}
+
+func TestDownMoveItDoesntMerge(t *testing.T){
+	checkMoveTileDosentMerge(moveDown, [][]int{[]int{0, 0, 2}, []int{3, 3, 4}}, []Tile{Tile{x: 0, y: 3, value:2}, Tile{x: 3, y: 3, value:4}}, t)
+}
+
+func TestLeftMoveItDoesntMerge(t *testing.T){
+	checkMoveTileDosentMerge(moveLeft, [][]int{[]int{0, 0, 2}, []int{3, 3, 4}}, []Tile{Tile{x: 0, y: 0, value:2}, Tile{x: 0, y: 3, value:4}}, t)
+}
+
+func TestMoveItMergeCell(t *testing.T){
+	game := Game{gridSize: 4}
+	gameInfo := GameInfo{TileState: createTileState(4, [][]int{[]int{0, 0, 4}, []int{0, 3, 4}})}
+
+	game.setup(gameInfo)
+	game.move(moveDown)
+
+	expect := Tile{x: 0, y: 3, value: 8}
+	cell := game.grid.CellContent(&expect)
+
+	if cell.isEmpty != false && cell.value != expect.value && len(expect.mergedFrom) != 2{
+		t.Errorf("%v, %v should be full and it has %v, mergeFrom is %v", expect.x, expect.y, expect.value, expect.mergedFrom)
+	}
+}
+
+func checkMoveTileDosentMerge(move int, d [][]int, expect []Tile, t *testing.T){
+	game := Game{gridSize: 4}
+	gameInfo := GameInfo{TileState: createTileState(4, d)}
+
+	game.setup(gameInfo)
+	game.move(move)
+
+	for i := 0; i < len(expect); i++ {
+		cell := game.grid.CellContent(&expect[i])
+
+		if cell.isEmpty != false && cell.value != expect[i].value{
+			t.Errorf("%v, %v should be full and it has %v", expect[i].x, expect[i].y, expect[i].value)
+		}
+	}
+}
+
 func checkPositionTraversal(actual PositionTraversal, expected PositionTraversal, t *testing.T){
 	for i := 0; i < len(actual.x); i++ {
 		if actual.x[i] != expected.x[i] {
@@ -183,6 +304,21 @@ func checkPositionTraversal(actual PositionTraversal, expected PositionTraversal
 	}
 }
 
+func createFullTileState(gridSize int, values []int)[][][]int{
+	ts := createTileState(gridSize, [][]int{})
+
+	for ly := 0; ly < gridSize; ly++ {
+		for lx := 0; lx < gridSize; lx++ {
+			if ly * gridSize + lx < len(values) {
+				ts[ly][lx][2] = values[ly * gridSize + lx]
+			} else {
+				ts[ly][lx][2] = 2
+			}
+		}
+	}
+
+	return ts
+}
 
 func createTileState(gridSize int, pos [][]int) [][][]int{
 	p := [][][]int{}
@@ -193,11 +329,15 @@ func createTileState(gridSize int, pos [][]int) [][][]int{
 			var value int = 0
 			for pi := 0; pi < len(pos); pi++ {
 				if pos[pi][0] == lx && pos[pi][1] == ly {
-					value = 4
+					if len(pos[pi]) > 2 {
+						value = pos[pi][2]
+					} else {
+						value = 4
+					}
 				}
 			}
 
-			r = append(r, []int{lx, ly, value})
+			r = append(r, []int{ly, lx, value})
 		}
 		p = append(p, r)
 	}
