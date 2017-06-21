@@ -101,10 +101,6 @@ func handleKeyEvent() {
 
 type Drawer struct{}
 
-type Temp struct {
-	str string
-}
-
 func (d *Drawer) redraw(grid *Grid, score int, highScore int, isOver bool) {
 	if debugRun {
 		dumpCell(grid, score, highScore, isOver)

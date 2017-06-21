@@ -276,7 +276,9 @@ func TestMoveItMergeCell(t *testing.T){
 
 func checkMoveTileDosentMerge(move int, d [][]int, expect []Tile, t *testing.T){
 	game := Game{gridSize: 4}
-	gameInfo := GameInfo{TileState: createTileState(4, d)}
+	var gameInfo GameInfo
+	gameInfo.load()
+	gameInfo = GameInfo{TileState: createTileState(4, d)}
 
 	game.setup(gameInfo)
 	game.move(move)
