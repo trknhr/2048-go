@@ -9,7 +9,8 @@ This app works on command and helps your sabotage.
 
 # Screen shot
 
-![screen shot](2048-go.gif)
+[![asciicast](https://asciinema.org/a/jkyqRNv1yWi8E59cUCIQSjiit.png)](https://asciinema.org/a/jkyqRNv1yWi8E59cUCIQSjiit)
+
 
 # How to install
 
