@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	"time"
+	"errors"
 )
 
 type Grid struct {
@@ -62,9 +63,9 @@ func (g *Grid) eachCell(callback func(x int, y int, tile Tile)) {
 }
 
 func (g *Grid) CellAvailable(tile *Tile) bool {
-	r := g.CellContent(tile)
+	r, error := g.CellContent(tile)
 
-	return r != nil && r.isEmpty
+	return error == nil && r.isEmpty
 }
 
 func (g *Grid) WithinBounds(position *Tile) bool {
@@ -90,10 +91,10 @@ func (g *Grid) removeTile(tile *Tile) {
 	g.cells[tile.x][tile.y].isEmpty = true
 }
 
-func (g *Grid) CellContent(cell *Tile) *Tile {
+func (g *Grid) CellContent(cell *Tile) (*Tile, error) {
 	if g.WithinBounds(cell) {
-		return &g.cells[cell.x][cell.y]
+		return &g.cells[cell.x][cell.y], nil
 	} else {
-		return nil
+		return nil, errors.New("The cells doesn't exist")
 	}
 }

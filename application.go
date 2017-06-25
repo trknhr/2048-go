@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"log"
 )
 
 const GAME_WIDTH = 80
@@ -68,8 +69,9 @@ func drawSell(tile Tile, left int, top int, cellWidth int, cellHeight int) {
 	defaultColorFill(left, top, 1, cellHeight, termbox.Cell{Ch: '|'})
 	defaultColorFill(left, top+cellHeight, cellWidth, 1, termbox.Cell{Ch: '─'})
 	defaultColorFill(left+cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
+
 	if !tile.isEmpty {
-		tbprint(left+cellWidth/2, top+cellHeight/2, coldef, coldef, strconv.Itoa(tile.value))
+		tbprint(left+cellWidth/2, top+cellHeight/2,  getColor(tile.value), coldef, strconv.Itoa(tile.value))
 	}
 }
 
@@ -334,6 +336,8 @@ var (
 	debugRun bool
 )
 
+
+
 func main() {
 	flag.BoolVar(&debugRun, "debug", false, "debugRun flag")
 	flag.Parse()
@@ -358,6 +362,7 @@ func main() {
 	}
 
 	if err != nil {
+		log.Fatal(err)
 		panic(err)
 	}
 }

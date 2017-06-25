@@ -267,7 +267,7 @@ func TestMoveItMergeCell(t *testing.T){
 	game.move(moveDown)
 
 	expect := Tile{x: 0, y: 3, value: 8}
-	cell := game.grid.CellContent(&expect)
+	cell, _ := game.grid.CellContent(&expect)
 
 	if cell.isEmpty != false && cell.value != expect.value && len(expect.mergedFrom) != 2{
 		t.Errorf("%v, %v should be full and it has %v, mergeFrom is %v", expect.x, expect.y, expect.value, expect.mergedFrom)
@@ -284,7 +284,7 @@ func checkMoveTileDosentMerge(move int, d [][]int, expect []Tile, t *testing.T){
 	game.move(move)
 
 	for i := 0; i < len(expect); i++ {
-		cell := game.grid.CellContent(&expect[i])
+		cell, _ := game.grid.CellContent(&expect[i])
 
 		if cell.isEmpty != false && cell.value != expect[i].value{
 			t.Errorf("%v, %v should be full and it has %v", expect[i].x, expect[i].y, expect[i].value)

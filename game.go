@@ -129,16 +129,16 @@ func (g *Game) positionsEqual(first *Tile, second *Tile) bool {
 func (g *Game) tileMatchesAvailable() bool {
 	for y := 0; y < g.grid.size; y++ {
 		for x := 0; x < g.grid.size; x++ {
-			t := g.grid.CellContent(&Tile{x: x, y: y})
+			t, error := g.grid.CellContent(&Tile{x: x, y: y})
 
-			if !t.isEmpty {
+			if error == nil && !t.isEmpty {
 				for d := 0; d < 4; d++ {
 					vec := g.getVector(d)
 					cell := Tile{x: x + vec.x, y: y + vec.y}
 
-					o := g.grid.CellContent(&cell)
+					o, error := g.grid.CellContent(&cell)
 
-					if o != nil && !o.isEmpty && o.value == t.value {
+					if error == nil && !o.isEmpty && o.value == t.value {
 						return true
 					}
 				}
@@ -167,12 +167,12 @@ func (g *Game) move(direction int) {
 		for j := 0; j < len(traversals.y); j++ {
 
 			cell := Tile{x: traversals.x[i], y: traversals.y[j]}
-			tile := g.grid.CellContent(&cell)
+			tile, error := g.grid.CellContent(&cell)
 
-			if tile != nil && !tile.isEmpty {
+			if error == nil && !tile.isEmpty {
 				farPos, nextPos := g.FindFarthestPosition(cell, vector)
-				next := g.grid.CellContent(nextPos)
-				if next != nil && next.value == tile.value {
+				next, error := g.grid.CellContent(nextPos)
+				if error == nil && next.value == tile.value {
 					merged := Tile{x: nextPos.x, y: nextPos.y, value: tile.value * 2}
 					tiles := make([]Tile, 2)
 					tiles[0] = g.copyTile(tile)
