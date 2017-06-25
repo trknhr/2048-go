@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"math/rand"
 	"time"
-	"errors"
 )
 
 type Grid struct {

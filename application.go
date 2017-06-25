@@ -7,10 +7,10 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/mattn/go-runewidth"
 	"github.com/nsf/termbox-go"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
-	"log"
 )
 
 const GAME_WIDTH = 80
@@ -71,7 +71,7 @@ func drawSell(tile Tile, left int, top int, cellWidth int, cellHeight int) {
 	defaultColorFill(left+cellWidth, top, 1, cellHeight, termbox.Cell{Ch: '|'})
 
 	if !tile.isEmpty {
-		tbprint(left+cellWidth/2, top+cellHeight/2,  getColor(tile.value), coldef, strconv.Itoa(tile.value))
+		tbprint(left+cellWidth/2, top+cellHeight/2, getColor(tile.value), coldef, strconv.Itoa(tile.value))
 	}
 }
 
@@ -335,8 +335,6 @@ func controlFromCommand() error {
 var (
 	debugRun bool
 )
-
-
 
 func main() {
 	flag.BoolVar(&debugRun, "debug", false, "debugRun flag")
