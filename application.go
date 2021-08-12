@@ -13,8 +13,6 @@ import (
 	"strconv"
 )
 
-// const game_width int = 40 / 2
-// const game_height int = 40 / 2
 const GAME_TOP_OFFSET = 1
 
 type Tile struct {
@@ -83,6 +81,8 @@ func handleKeyEvent() {
 			case termbox.KeyEsc:
 				return
 			case termbox.KeySpace:
+				return
+			case termbox.KeyEnter:
 				return
 			case termbox.KeyArrowDown:
 				dispatch("down", &Message{data: "push left"})
@@ -356,7 +356,7 @@ var (
 func main() {
 	flag.BoolVar(&debugRun, "debug", false, "debugRun flag")
 	flag.IntVar(&rowLength, "rowLength", 4, "set the number of tiles per row")
-	flag.IntVar(&tileSize, "tileSize", 8, "set the size of the square tiles")
+	flag.IntVar(&tileSize, "tileSize", 4, "set the size of the square tiles")
 	flag.Parse()
 	
 	game_width = tileSize * 10
